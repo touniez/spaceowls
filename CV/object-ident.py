@@ -3,15 +3,15 @@ from picamera2 import Picamera2
 #thres = 0.45 # Threshold to detect object
 
 classNames = []
-classFile = "/home/pi/Object_Detection_Files/coco.names"
+classFile = "/home/pi/Desktop/Object_Detection_Files/coco.names"
 with open(classFile,"rt") as f:
     classNames = f.read().rstrip("\n").split("\n")
 
-configPath = "/home/pi/Object_Detection_Files/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
-weightsPath = "/home/pi/Object_Detection_Files/frozen_inference_graph.pb"
+configPath = "/home/pi/Desktop/Object_Detection_Files/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
+weightsPath = "/home/pi/Desktop/Object_Detection_Files/frozen_inference_graph.pb"
 
 net = cv2.dnn_DetectionModel(weightsPath,configPath)
-net.setInputSize(640,480)
+net.setInputSize(300,150)
 net.setInputScale(1.0/ 127.5)
 net.setInputMean((127.5, 127.5, 127.5))
 net.setInputSwapRB(True)
@@ -29,10 +29,10 @@ def getObjects(img, thres, nms, draw=True, objects=[]):
                 objectInfo.append([box,className])
                 if (draw):
                     cv2.rectangle(img,box,color=(0,255,0),thickness=2)
-                    cv2.putText(img,classNames[classId-1].upper(),(box[0]+10,box[1]+30),
-                    cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
-                    cv2.putText(img,str(round(confidence*100,2)),(box[0]+200,box[1]+30),
-                    cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
+                    # cv2.putText(img,classNames[classId-1].upper(),(box[0]+10,box[1]+30),
+                    # cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
+                    # cv2.putText(img,str(round(confidence*100,2)),(box[0]+200,box[1]+30),
+                    # cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
 
     return img,objectInfo
 
@@ -47,7 +47,7 @@ def getObjects(img, thres, nms, draw=True, objects=[]):
 #    print('error opening stream')
 #    exit(0)
 picam2 = Picamera2()
-picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (640, 480)}))
+picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (300, 150)}))
 picam2.start()
 
 while True:
