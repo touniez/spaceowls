@@ -12,6 +12,7 @@ String input = "";
 #define PIN 6
 int input1;
 int input2;
+int comma_index, colon_index, prev_colon;
 int x1;
 int x2;
 int bruh;
@@ -20,8 +21,8 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(256, PIN, NEO_GRB + NEO_KHZ800);
 void setup()
 {
   Serial.begin(115200);
-  //Serial1.begin(115200);
-   Serial.setTimeout(250);
+  
+  //Serial.setTimeout(250);
 
   
   mode = String('standby');
@@ -34,33 +35,35 @@ void setup()
 void loop() {
    Serial.println(Serial.available());
    input = Serial.readStringUntil('\r');
-//   Serial.println(input);
-//     Serial.print("R\n");
+   //Serial.print(input);
+
+   if(input.indexOf(',') != -1){
+      reset();
+      comma_index = input.indexOf(',');
+      colon_index = input.indexOf(':');
+      prev_colon = 0;
+      while(colon_index != -1){
+          
+          x1 = input.substring(prev_colon, comma_index).toInt();
+          x2 = input.substring(comma_index + 1,colon_index).toInt();
+          Serial.flush();
+          light_block(x1, x2);
+          prev_colon = colon_index + 1;
+          colon_index = input.indexOf(':',prev_colon);
+          comma_index = comma_index = input.indexOf(',',prev_colon);
+      }
+
+      x1 = input.substring(prev_colon, comma_index).toInt();
+      x2 = input.substring(comma_index + 1).toInt();
+      Serial.println(x2);
+      Serial.flush();
+      light_block(x1, x2);
+    
+   }
+   strip.show();
    
-
-  /*if (input == 'standby'){
-    reset();
-    mode = 'standby';
-    giveD();
-  }
-  */
-
-  if(input.indexOf(',') != -1){
-    reset();
-//    strip.show();
-    int commaIndex = input.indexOf(',');
-    x1 = input.substring(0, commaIndex).toInt();
-    x2 = input.substring(commaIndex + 1).toInt();
-    Serial.flush();
-    light_block(x1, x2);
-    strip.show();
-    
-
-    
-  }
   
-  
-  /*if(mode == 'standby'){
+}  /*if(mode == 'standby'){
     reset();
     giveD();
     delay(100); 
@@ -69,7 +72,6 @@ void loop() {
   /*if(mode == 'active'){
     
   }*/
-}
 
 void giveD() {
   
