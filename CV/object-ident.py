@@ -45,7 +45,7 @@ def getObjects(img, thres, nms, objects=[]):
 
 
 if __name__ == '__main__':
-	ser = serial.Serial('/dev/ttyACM0', 115200, timeout=1)
+	ser = serial.Serial('/dev/ttyACM1', 115200, timeout=1)
 	ser.reset_input_buffer()
 	#ser.close()
 	#ser.open()
@@ -71,24 +71,21 @@ while True:
 		img = cv2.resize(img, (model_x, model_y))
 		rgbImage = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
 		objectInfo = getObjects(rgbImage,0.45,0.8,objects = ['person'])
-		# cv2.imshow("Output",rgbImage)
-
+		
+		location = ""
 		for item in objectInfo:
 			poop = item[0][0]
 			x1 = item[0][0] // 10
 			x2 = (poop + item[0][2]) // 10
-			location = str(x1)+","+str(x2)+"\r\n"
-			print(location)
-			ser.write(bytes(location,'utf-8'))
-			time.sleep(0.25)
-			received = False  
-			#while received == False:
-			#	status = ser.readline().decode('utf-8').rstrip()
-			#	print(status)
-			#	if status == "R":
-			#		received = True
+			location = location + str(x1)+","+str(x2) + ":"
 		if objectInfo == []:
-	#		mode = 'standby'
-			print("Going standby")
+			location = "\r\n"
+		else:
+			location = location[0:len(location) - 1] + "\r\n"
+		
+		print(location)
+		ser.write(bytes(location,'utf-8'))
+		time.sleep(0.25)
+
 		cv2.waitKey(1)
 
