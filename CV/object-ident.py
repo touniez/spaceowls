@@ -1,91 +1,68 @@
-import serial
-import time
 import cv2
 from picamera2 import Picamera2
 #thres = 0.45 # Threshold to detect object
 
 classNames = []
-classFile = "/home/pi/Object_Detection_Files/coco.names"
+classFile = "/home/pi/Desktop/Object_Detection_Files/coco.names"
 with open(classFile,"rt") as f:
-	classNames = f.read().rstrip("\n").split("\n")
+    classNames = f.read().rstrip("\n").split("\n")
 
-configPath = "/home/pi/Object_Detection_Files/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
-weightsPath = "/home/pi/Object_Detection_Files/frozen_inference_graph.pb"
+configPath = "/home/pi/Desktop/Object_Detection_Files/ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt"
+weightsPath = "/home/pi/Desktop/Object_Detection_Files/frozen_inference_graph.pb"
 
+# x_dim = 1024
+# y_dim = 200
 x_dim = 2304
 y_dim = 1296
-model_x = 320
-model_y = 90
-
-picam2 = Picamera2()
-picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (x_dim, y_dim)}))
-picam2.set_controls({"FrameRate": 30})
-picam2.start()
 net = cv2.dnn_DetectionModel(weightsPath,configPath)
-net.setInputSize(model_x,model_y)
+net.setInputSize(320,90)
 net.setInputScale(1.0/ 127.5)
 net.setInputMean((127.5, 127.5, 127.5))
 net.setInputSwapRB(True)
 
 
-#CV Function
-def getObjects(img, thres, nms, objects=[]):
-	classIds, confs, bbox = net.detect(img,confThreshold=thres,nmsThreshold=nms)
-	#print(classIds,bbox)
-	if len(objects) == 0: 
-		objects = classNames
-	objectInfo =[]
-	if len(classIds) != 0:
-		for classId, confidence,box in zip(classIds.flatten(),confs.flatten(),bbox):
-			className = classNames[classId - 1]
-			if className in objects:
-				objectInfo.append([box,className])
-				cv2.rectangle(img,box,color=(0,255,0),thickness=2)
-	return objectInfo
+def getObjects(img, thres, nms, draw=True, objects=[]):
+    classIds, confs, bbox = net.detect(img,confThreshold=thres,nmsThreshold=nms)
+    #print(classIds,bbox)
+    if len(objects) == 0: objects = classNames
+    objectInfo =[]
+    if len(classIds) != 0:
+        for classId, confidence,box in zip(classIds.flatten(),confs.flatten(),bbox):
+            className = classNames[classId - 1]
+            if className in objects:
+                objectInfo.append([box,className])
+                if (draw):
+                    cv2.rectangle(img,box,color=(0,255,0),thickness=2)
+                # item = objectInfo[0]
+                # box = item[0]
+                # x2 = box[0] // 32
+                # y2 = (box[0] + box[2]) // 32
+                #    print("x2 = " + str(x2))
+                #print("y2 = " + str(y2))
+    return img,objectInfo
 
 
-if __name__ == '__main__':
-	ser = serial.Serial('/dev/ttyACM1', 115200, timeout=1)
-	ser.reset_input_buffer()
-	#ser.close()
-	#ser.open()
-
-mode = 'standby'
-cv2.startWindowThread()
-cv2.namedWindow("Output")
+picam2 = Picamera2()
+picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (x_dim, y_dim)}))
+picam2.set_controls({"FrameRate": 30})
+picam2.start()
 
 while True:
-	#Standby mode
-	#if mode == 'standby':
-	#	ser.write(b"standby\n")
-	#	print("fuck")
-	#	status = ser.readline().decode('utf-8').rstrip()
-	#	if status == 'go active':
-	#		mode = 'active'
-	#		print("I just went active")
-        	#time.sleep(1)
-
-	#if mode == 'active':
-		#Image acquisition
-		img = picam2.capture_array()
-		img = cv2.resize(img, (model_x, model_y))
-		rgbImage = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
-		objectInfo = getObjects(rgbImage,0.45,0.8,objects = ['person'])
-		
-		location = ""
-		for item in objectInfo:
-			poop = item[0][0]
-			x1 = item[0][0] // 10
-			x2 = (poop + item[0][2]) // 10
-			location = location + str(x1)+","+str(x2) + ":"
-		if objectInfo == []:
-			location = "\r\n"
-		else:
-			location = location[0:len(location) - 1] + "\r\n"
-		
-		print(location)
-		ser.write(bytes(location,'utf-8'))
-		time.sleep(0.25)
-
-		cv2.waitKey(1)
-
+    #success, img = cap.read()
+    img = picam2.capture_array()
+    img = cv2.resize(img, (320,90))
+    rgbImage = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+    
+    result, objectInfo = getObjects(rgbImage,0.6,0.8,objects = ['person'])
+    #print(objectInfo)
+    diagram = [1 for i in range(32)]
+    for item in objectInfo:
+        poop = item[0][0]
+        x1 = item[0][0] // 10
+        x2 = (poop + item[0][2]) // 10
+        for x in range(x1,x2):
+            diagram[x] = -1
+    for i in range(32):
+        cv2.rectangle(rgbImage, (i* 10, 80), ((i+1) * 10 - 1 , 90), color=(255,0,0), thickness=diagram[i])
+    cv2.imshow("Output",rgbImage)
+    cv2.waitKey(1)
