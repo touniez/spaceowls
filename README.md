@@ -7,3 +7,5 @@
 6) may need to remove new version of tflite: sudo apt remove tensorflow-lite
 
 
+pi password: owls
+pi username: pi
