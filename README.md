@@ -9,3 +9,8 @@
 
 pi password: owls
 pi username: pi
+
+
+
+pip install pycocotools
+pip install -q tflite-model-maker
