@@ -14,3 +14,5 @@ pi username: pi
 
 pip install pycocotools
 pip install -q tflite-model-maker
+
+sudo python3 newcv.py
