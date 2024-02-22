@@ -11,8 +11,9 @@ pi password: owls
 pi username: pi
 
 
-
+# set up env to retrain model:
 pip install pycocotools
 pip install -q tflite-model-maker
 
+# Run new cv for coral
 sudo python3 newcv.py
