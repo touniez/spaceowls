@@ -43,7 +43,7 @@ def main():
 
         # Invoke interpreter then get the detected objects
         interpreter.invoke()
-        objs = detect.get_objects(interpreter, score_threshold=0.4, image_scale=scale)
+        objs = detect.get_objects(interpreter, score_threshold=0.3, image_scale=scale)
 
         # Loop over all detections and draw detection box if confidence is above minimum threshold and is person
         print("found " + str(len(objs)) + " items")
@@ -53,16 +53,14 @@ def main():
                 bbox.ymin) + ":" + str(bbox.xmax) + ":" + str(bbox.ymax))
             # Make head red
             if labels.get(obj.id, obj.id) == "Head":
-                cv2.rectangle(disp_img, (bbox.xmin * d_width/width, bbox.ymin * d_height/height),
-                              (bbox.xmax * d_width/width, bbox.ymax * d_height/height), (0, 0, 255), 2)
+                cv2.rectangle(disp_img, (int(bbox.xmin * d_width/width), int(bbox.ymin * d_height/height)), (int(bbox.xmax * d_width/width), int(bbox.ymax * d_height/height)), (0, 0, 255), 2)
             # Make body blue
             else:
-                cv2.rectangle(disp_img, (bbox.xmin * d_width/width, bbox.ymin * d_height/height),
-                              (bbox.xmax * d_width/width, bbox.ymax * d_height/height), (0, 255, 0), 2)
+                cv2.rectangle(disp_img, (int(bbox.xmin * d_width/width), int(bbox.ymin * d_height/height)), (int(bbox.xmax * d_width/width), int(bbox.ymax * d_height/height)), (0, 255, 0), 2)
 
         # All the results have been drawn on the frame, so it's time to display it.
         cv2.imshow('Object detector', disp_img)
-        cv2.waitKey(1)
+        cv2.waitKey(100)
 
 
 if __name__ == '__main__':
