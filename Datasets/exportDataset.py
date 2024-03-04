@@ -6,7 +6,7 @@ dataset = foz.load_zoo_dataset(
     split="validation",
     max_samples=1000,
     label_types=["detections"],
-    classes="Human head",
+    classes=["Human head", "Human body"],
     only_matching=True,
 )
 
