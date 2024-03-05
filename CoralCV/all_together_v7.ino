@@ -54,7 +54,6 @@ void loop()
           int maxX = max(x1,x2);
           int minY = min(y1,y2);
           int maxY = max(y1,y2);
-          //Serial.println(String(x1)+" "+String(x2)+" "+String(y1)+" "+String(y2));
           minX = max(0, minX); //Catches weird bug where min x is like -24500
           maxX = min(31,maxX);  //Max possible x is 31, this statement needed bc pi sometimes sends 32
           minY = max(1,minY);   //Min possible y is 1(top row 0 always lit), this statement needed bc pi sometimes sends 0
@@ -73,6 +72,7 @@ void loop()
           question_index = input.indexOf('?',prev_colon);
           excl_index = input.indexOf('!',prev_colon);
       }
+      prev_colon += 1; // Increment prev colon to skip the "/"
       while(colon_index != -1){         
           x1 = input.substring(prev_colon, comma_index).toInt();
           x2 = input.substring(comma_index + 1,question_index).toInt();
@@ -83,7 +83,6 @@ void loop()
           int maxX = max(x1,x2);
           int minY = min(y1,y2);
           int maxY = max(y1,y2);
-          //Serial.println(String(x1)+" "+String(x2)+" "+String(y1)+" "+String(y2));
           minX = max(0, minX); //Catches weird bug where min x is like -24500
           maxX = min(31,maxX);  //Max possible x is 31, this statement needed bc pi sometimes sends 32
           minY = max(1,minY);   //Min possible y is 1(top row 0 always lit), this statement needed bc pi sometimes sends 0
