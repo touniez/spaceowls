@@ -34,8 +34,12 @@ def main():
     # Start Picam
     picam2 = Picamera2()
     picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (2304, 1296)}))
-    picam2.set_controls({'ExposureTime': 100000})
+    # picam2.set_controls({'ExposureTime': 50000})
     picam2.start()
+    prev_bodies = ""
+    prev_0_bodies = 0
+    prev_heads = ""
+    prev_0_heads = 0
 
     while True:
         heads = ""
@@ -52,30 +56,54 @@ def main():
 
         # Invoke interpreter then get the detected objects
         interpreter.invoke()
-        objs = detect.get_objects(interpreter, score_threshold=0.5, image_scale=scale)
+        objs = detect.get_objects(interpreter, score_threshold=0.3, image_scale=scale)
 
         # Loop over all detections and draw detection box if confidence is above minimum threshold and is person
+        body_count = 0
+        head_count = 0
         print("found " + str(len(objs)) + " items")
         for obj in objs:
             bbox = obj.bbox
             # Make head red
             if labels.get(obj.id, obj.id) == "Head":
                 cv2.rectangle(disp_img, (int(bbox.xmin * d_width/width), int(bbox.ymin * d_height/height)), (int(bbox.xmax * d_width/width), int(bbox.ymax * d_height/height)), (0, 0, 255), 2)
-                heads += str(int(bbox.xmin * 32.0/width))+","+str(int(bbox.xmax * 32.0/width))+"?"+str(int(bbox.ymin * 8.0/height))+"!"+str(int(bbox.ymax * 8.0/height))+":"
+                heads += str(int(bbox.xmin * 32.0/width) - 1)+","+str(int(bbox.xmax * 32.0/width) + 1)+"?"+str(int(bbox.ymin * 8.0/height) - 1)+"!"+str(int(bbox.ymax * 8.0/height) + 1)+":"
+                head_count += 1
+                prev_0_heads = 0
             # Make body blue
             else:
                 cv2.rectangle(disp_img, (int(bbox.xmin * d_width/width), int(bbox.ymin * d_height/height)), (int(bbox.xmax * d_width/width), int(bbox.ymax * d_height/height)), (0, 255, 0), 2)
                 bodies += str(int(bbox.xmin * 32.0/width))+","+str(int(bbox.xmax * 32.0/width))+"?"+str(int(bbox.ymin * 8.0/height))+"!"+str(int(bbox.ymax * 8.0/height))+":"
+                body_count += 1
+                prev_0_bodies = 0
         
+        # If no body is detected for 10 straight frames, turn off the lights
+        # Otherwise, use the previous bodies to reduce flickering
+        if body_count == 0:
+            if prev_0_bodies < 5:
+                bodies = prev_bodies
+                prev_0_bodies = min(5, prev_0_bodies + 1)
+            else:
+                bodies = ""
+        if head_count == 0:
+            if prev_0_heads < 5:
+                heads = prev_heads
+                prev_0_heads = min(5, prev_0_heads + 1)
+            else:
+                heads = ""
+                
         print("Heads: " + heads)
         print("Bodies: " + bodies)
         heads += "\r\n"
         print("massage to pi: " + bodies + "/" + heads)
         ser.write(bytes(bodies + "/" + heads,'utf-8'))
+        prev_bodies = bodies
+        prev_heads = heads
+
         
         # All the results have been drawn on the frame, so it's time to display it.
         cv2.imshow('Object detector', disp_img)
-        cv2.waitKey(100)
+        cv2.waitKey(10)
 
 
 if __name__ == '__main__':
