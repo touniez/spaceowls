@@ -11,7 +11,7 @@ pi password: owls
 pi username: pi
 
 
-# set up env to retrain model:
+# set up anaconda env to retrain model:
 pip install pycocotools
 pip install -q tflite-model-maker
 
